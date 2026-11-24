@@ -68,5 +68,5 @@ A coleção está em `postman/taskflow.postman_collection.json`, com as seis req
 ## Dificuldades e pendências
 
 - Dificuldades encontradas: entender o funcionamento do código e conseguir explicá-lo com as minhas palavras, principalmente o estado global com Context e useReducer e o fato de a JSONPlaceholder apenas simular as gravações.
-- 
+
 - Funcionalidades pendentes: testes automatizados, persistência das tarefas no navegador (localStorage) e deploy.
