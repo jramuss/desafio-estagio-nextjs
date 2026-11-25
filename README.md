@@ -1,54 +1,72 @@
-# Desafio Técnico — Estágio em Desenvolvimento Web
+# TaskFlow
 
-## Contexto
+Aplicação web para gerenciamento de tarefas de uma equipe, feita com **Next.js (App Router)**, **React** e **JavaScript**, consumindo a API REST [JSONPlaceholder](https://jsonplaceholder.typicode.com/).
 
-Desenvolva o **TaskFlow**, uma aplicação web para gerenciamento de tarefas de uma equipe. O desafio é individual e avalia Next.js, integração REST, Postman, Git, organização de código e usabilidade.
+## Funcionalidades
 
-**Prazo:** 6 dias corridos a partir da data de disponibilização do desafio pelo avaliador.
+- Listagem de tarefas com título, status e responsável (cruzando `todos.userId` com `users.id`)
+- Pesquisa por título
+- Filtro por status: todas, pendentes e concluídas
+- Cadastro de tarefa (título + responsável) com validação (`POST /todos`)
+- Alternar status entre pendente e concluída (`PATCH /todos/:id`)
+- Exclusão de tarefa (`DELETE /todos/:id`)
+- Estados de interface: carregando, erro (com botão "Tentar novamente") e lista vazia
+- Paginação simples (10 por página) — funcionalidade opcional
+- Layout responsivo (desktop e celular) e foco visível nos controles
 
-## Tecnologias obrigatórias
+## Como executar
 
-- Next.js (App Router), React e JavaScript ou TypeScript
-- Git e GitHub
-- Postman
-- CSS (livre escolha de abordagem)
-- API REST JSONPlaceholder: https://jsonplaceholder.typicode.com/
-
-Não é necessário criar backend nem banco de dados.
-
-## Começando
-
-1. Clone este repositório.
-2. A partir da branch `main` atualizada, crie sua branch individual:
-   - Candidato 1: `candidato/estagiario-01`
-   - Candidato 2: `candidato/estagiario-02`
-3. Desenvolva o projeto Next.js nesta branch, sem alterar diretamente a `main`.
-4. Faça commits pequenos e descritivos durante o desenvolvimento.
-5. Publique sua branch e abra um Pull Request **para `main`** até o prazo.
+Pré-requisito: Node.js 18.18 ou superior.
 
 ```bash
-git clone URL_DO_REPOSITORIO
-cd desafio-estagio-nextjs
-git switch main
-git pull origin main
-git switch -c candidato/estagiario-01
-# Desenvolva sua aplicação...
-git add .
-git commit -m "feat: inicia aplicacao Next.js"
-git push -u origin candidato/estagiario-01
+npm install
+npm run dev
 ```
 
-> Substitua `URL_DO_REPOSITORIO` pela URL fornecida pelo avaliador e use a branch atribuída a você.
+Abra http://localhost:3000.
 
-## Documentação do desafio
+Para gerar a versão de produção:
 
-- [Requisitos funcionais e técnicos](docs/REQUISITOS.md)
-- [API e testes com Postman](docs/API.md)
-- [Prazo, cronograma e critérios de entrega](docs/ENTREGA.md)
+```bash
+npm run build
+npm start
+```
 
-## Regras
+## Estrutura
 
-- Trabalho individual. Não copie o código do outro candidato.
-- É permitido consultar documentação, tutoriais e ferramentas de IA; o candidato deverá explicar o código na apresentação.
-- Não é obrigatório fazer deploy.
-- A avaliação considerará também o processo de desenvolvimento, não apenas a aparência final.
+```
+app/                  # App Router: layout, página e CSS global
+components/           # Componentes reutilizáveis (TaskBoard, TaskForm, TaskItem...)
+lib/api.js            # Camada de acesso à API (fetch isolado)
+store/tasks-context.js# Estado global (Context API + useReducer)
+postman/              # Coleção Postman exportada
+```
+
+## Decisões técnicas
+
+- **App Router:** `app/page.js` é um Server Component simples; só os componentes que precisam de estado e eventos usam `"use client"`.
+- **fetch nativo:** dispensa dependência extra. Todas as chamadas ficam em `lib/api.js`, com tratamento de status HTTP em um único lugar.
+- **Estado com Context + useReducer:** o app tem poucas ações bem definidas (carregar, adicionar, alterar status, remover), então o reducer deixa as transições explícitas sem precisar de biblioteca externa.
+- **Filtros derivados:** pesquisa e filtro de status são calculados a partir da lista (`useMemo`), sem duplicar estado.
+- **CSS puro:** um único `globals.css` com variáveis CSS e *media query* para telas pequenas.
+
+## Sobre a persistência (JSONPlaceholder)
+
+A API **simula** `POST`, `PATCH` e `DELETE`: responde com sucesso, mas não grava nada. Por isso a interface mantém as alterações em estado local durante a sessão (ao atualizar a página, os dados voltam ao original — conforme o enunciado).
+
+Dois cuidados decorrentes disso:
+
+1. O `POST` sempre devolve `id: 201`. Para evitar ids repetidos ao cadastrar várias tarefas, a aplicação gera um id local único.
+2. Tarefas criadas localmente não existem na API; por isso `PATCH` e `DELETE` nelas só alteram o estado local (chamar a API retornaria erro).
+
+Nas tarefas vindas da API, a alteração de status e a exclusão são **otimistas**: a tela muda na hora e a mudança é desfeita, com mensagem de erro, se a requisição falhar.
+
+## Postman
+
+A coleção está em `postman/taskflow.postman_collection.json`, com as seis requisições do desafio (GET /todos, GET /todos/1, GET /users, POST /todos, PATCH /todos/1, DELETE /todos/1) e testes simples de status e corpo. Para usar: *Import* no Postman e execute a coleção.
+
+## Dificuldades e pendências
+
+- Dificuldades encontradas: entender o funcionamento do código e conseguir explicá-lo com as minhas palavras, principalmente o estado global com Context e useReducer e o fato de a JSONPlaceholder apenas simular as gravações.
+
+- Funcionalidades pendentes: testes automatizados, persistência das tarefas no navegador (localStorage) e deploy.
